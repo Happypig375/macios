@@ -29,6 +29,9 @@ namespace Xamarin.Linker {
 		AssemblyDefinition? corlib_assembly;
 		AssemblyDefinition? platform_assembly;
 
+		// Invoked whenever an assembly is modified (i.e. whenever SaveAssembly is called).
+		public Action<AssemblyDefinition>? AssemblySaved { get; set; }
+
 		public AssemblyDefinition CurrentAssembly {
 			get {
 				if (current_assembly is null)
@@ -1455,6 +1458,7 @@ namespace Xamarin.Linker {
 		{
 			if (assembly != CurrentAssembly && assembly != PlatformAssembly)
 				throw new InvalidOperationException ($"Can't save assembly {assembly.Name} because it's not the current assembly ({CurrentAssembly.Name}) or the platform assembly ({PlatformAssembly.Name}).");
+			AssemblySaved?.Invoke (assembly);
 			var annotations = configuration.Context.Annotations;
 			var action = annotations.GetAction (assembly);
 			if (action == AssemblyAction.Copy) {
@@ -1559,7 +1563,10 @@ namespace Xamarin.Linker {
 			var attribute = CreateAttribute (DynamicDependencyAttribute_ctor__DynamicallyAccessedMemberTypes_Type);
 			// typed as 'int' because that's how the linker expects it: https://github.com/dotnet/runtime/blob/3c5ad6c677b4a3d12bc6a776d654558cca2c36a9/src/tools/illink/src/linker/Linker/DynamicDependency.cs#L97
 			attribute.ConstructorArguments.Add (new CustomAttributeArgument (System_Diagnostics_CodeAnalysis_DynamicallyAccessedMemberTypes, (int) memberTypes));
-			attribute.ConstructorArguments.Add (new CustomAttributeArgument (System_Type, type));
+			// Import the type into the current assembly, otherwise Cecil will serialize the Type argument
+			// without an assembly-qualified name when 'type' is a TypeDefinition from another assembly (because
+			// a TypeDefinition's Scope is its own module), and the trimmer won't be able to resolve it (IL2036).
+			attribute.ConstructorArguments.Add (new CustomAttributeArgument (System_Type, CurrentAssembly.MainModule.ImportReference (type)));
 			return attribute;
 		}
 
