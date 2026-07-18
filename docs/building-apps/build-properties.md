@@ -466,6 +466,23 @@ The full path to the `ditto` executable.
 
 The default behavior is to use `/usr/bin/ditto`.
 
+## DynamicRegistrationSupported
+
+Controls whether the dynamic registrar is available at runtime (as reported by
+`ObjCRuntime.Runtime.DynamicRegistrationSupported`).
+
+If this value is not specified, the build will compute a default value based
+on whether the app needs the dynamic registrar, and enables the
+`ObjCRuntime.Runtime.DynamicRegistrationSupported` trimmer feature switch
+accordingly (so the trimmer can remove the dynamic registrar when it's not
+needed, making the app smaller).
+
+Set this property to `true` or `false` to override the computed default.
+
+Removing the dynamic registrar requires a static registrar (`Registrar=static` or
+`Registrar=managed-static`) and trimming, so setting this property has no effect (and the
+build warns) when those conditions aren't met.
+
 ## EmbedOnDemandResources
 
 If on-demand resources should be embedded in the app bundle.
@@ -518,6 +535,10 @@ diagnostics, while NativeAOT never does).
 Enables the concurrent mode for the SGen garbage collector.
 
 Only applicable to iOS, tvOS and Mac Catalyst (when not using NativeAOT).
+
+This property only has an effect when using the Mono runtime, and a warning
+will be shown if it's set when not using the Mono runtime (for instance when
+using CoreCLR).
 
 ## EventSourceSupport
 
@@ -974,7 +995,8 @@ will decrease the amount of memory used at runtime:
 
 The downside is that type checks (`obj is SomeInterface`) will be slower.
 
-Only applicable when using the Mono runtime.
+Only applicable when using the Mono runtime. A warning will be shown if it's
+set when not using the Mono runtime (for instance when using CoreCLR).
 
 ## MtouchDebug
 
@@ -991,6 +1013,10 @@ Enables the concurrent mode for the SGen garbage collector.
 Only applicable to iOS, tvOS and Mac Catalyst when not using NativeAOT.
 
 This property is deprecated, use [EnableSGenConc](#enablesgenconc) instead.
+
+This property only has an effect when using the Mono runtime, and a warning
+will be shown if it's set when not using the Mono runtime (for instance when
+using CoreCLR).
 
 ## MtouchExtraArgs
 
@@ -1035,6 +1061,10 @@ The default behavior is to not enable the interpreter.
 > [!NOTE]
 > MAUI changes the default by setting `UseInterpreter=true` for the `"Debug"` configuration.
 
+This property only has an effect when using the Mono runtime, and a warning
+will be shown if it's set when not using the Mono runtime (for instance when
+using CoreCLR).
+
 ## MtouchLink
 
 Specifies the link mode for the project (`None`, `SdkOnly`, `Full`).
@@ -1063,7 +1093,14 @@ Default:
 * On iOS and tvOS: enabled for Release builds (where `Configuration="Release"`).
 * On Mac Catalyst: never enabled by default.
 
+This property only has an effect when using the Mono runtime, and a warning
+will be shown if it's set when not using the Mono runtime (for instance when
+using CoreCLR).
+
 ## NoBindingEmbedding
+
+> [!WARNING]
+> Setting this property to `false` is currently deprecated and will produce a build error in .NET 12+.
 
 A boolean property that specifies whether native libraries in binding projects should be embedded
 in the managed assembly, or put into a `.resources` directory next to the managed assembly.
@@ -1592,6 +1629,10 @@ The default behavior is to not enable the interpreter.
 > MAUI changes the default by setting `UseInterpreter=true` for the `"Debug"` configuration.
 
 See [MtouchInterpreter](#mtouchinterpreter) for more information.
+
+This property only has an effect when using the Mono runtime, and a warning
+will be shown if it's set when not using the Mono runtime (for instance when
+using CoreCLR).
 
 ## UseNativeHttpHandler
 
